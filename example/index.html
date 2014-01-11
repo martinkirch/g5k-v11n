@@ -1,0 +1,173 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<script type="text/javascript" charset="utf-8">
+    // one file per XP
+    var inputs = [
+      "experiment-1.json",
+      "experiment-2.json",
+      "experiment-3.json",
+      "non-Hadoop-job.json"
+    ];
+	</script>
+	
+<!--
+Copyright (c) 2014, Martin Kirchgessner, Université Joseph Fourier
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice, this
+  list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
+
+* Neither the name Université Joseph Fourier nor the names of 
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+  <style type="text/css">
+    body {
+      font-family: sans-serif;
+    }
+  
+    #msg_loading {
+      position:fixed;
+      top:40%;
+      left:0;
+      width:100%;
+      text-align:center;
+      font-size:130%;
+      font-weight:bold;
+      color: #888;
+    }
+    
+    #counters_selector {
+      height: 0;
+      overflow: hidden;
+      position: absolute;
+      top:1.5em;
+    }
+    
+    #counters_selector_label:hover > div, #counters_selector:hover {
+      height: 70%;
+      overflow: scroll;
+      border: 1px solid #aaa;
+      background:white;
+    }
+    
+    svg .axis path,
+  	svg .axis line {
+  		fill: none;
+  		stroke: black;
+  		shape-rendering: crispEdges;
+  	}
+
+  	svg .axis text {
+  		font-size: 11px;
+  	}
+
+  	svg line.grid {
+  	  stroke: #ccc;
+  	}
+  	
+  	svg .failed {
+  		font-size: 18px;
+  		font-weight: bold;
+  		fill: red;
+  	}
+  	
+  	svg .jobseparator {
+  	  stroke: black;
+  	  stroke-width: 2;
+  	  stroke-dasharray: 5, 5;
+  	}
+  	
+  	svg text.legend {
+  		font-size: 16px;
+  		fill: black;
+  		font-weight:bold;
+  	}
+  	
+  	svg .brush {
+      stroke: #fff;
+      fill-opacity: .125;
+      shape-rendering: crispEdges;
+    }
+  </style>
+	<title>Grid5000 resources visualization</title>
+</head>
+<body>
+	<header>
+    <input type="button" value="DRAW" onclick="Report.draw()" style="float:right; padding:1em; font-size:120%;">
+  
+    <input type="checkbox" value="filter" id="doFilter" />
+    <label for="doFilter">Filter on XP name</label>
+  
+    <input type="radio" class="show" name="show" value="counters" id="show_counters" checked="checked"/>
+    <label for="show_counters" id="counters_selector_label">
+      Counters
+      <div id="counters_selector"></div>
+    </label>
+
+    <input type="radio" class="show" name="show" value="metrics" id="show_metrics" />
+    <label for="show_metrics">System metrics : </label>  
+	  <select id="metrics"></select>
+	  for 
+	  <select id="xpname"></select>
+	</header>
+	
+	<div id="msg_loading">LOADING ...</div>
+	
+	
+	
+</body>
+
+<script src="d3.v3.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="report.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" charset="utf-8">
+  (function(){
+    var data = {};
+    var inputsCopied = inputs.slice(0); // ie. array copy
+    
+    function load(error, object) {
+      if (error) {
+        alert(error);
+      } else if (object) {
+      	var flattened = {};
+      	for (var i in object.jobs) {
+      		for (var counter in object.jobs[i]) {
+      			flattened[i+"."+counter] = object.jobs[i][counter];
+      		}
+      	}
+      	
+      	object.flatjobs = flattened;
+      	
+        data[inputsCopied[0].split('.')[0]] = object;
+      }
+      inputsCopied.shift();
+      if (inputsCopied.length > 0)
+        d3.json(inputsCopied[0], load);
+      else
+        Report.init(data);
+    }
+    
+    d3.json(inputsCopied[0], load);
+  })();
+</script>
+</html>
