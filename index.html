@@ -87,7 +87,7 @@
 	<p>
 		This set of scripts allows you, after an experiment on the
 		<a href="https://www.grid5000.fr/" target="_blank">Grid5000</a>
-		platform, to fetch per-machine metrics through the API and to see them nicely stacked,
+		platform, to fetch per-machine metrics (CPU, network usage, ...) through the API and to see them nicely stacked,
 		thanks to Mike Bostock's
 		<a href="http://d3js.org/" target="_blank">D3.js</a> .
 		It can also draw histograms from the system counters of different Hadoop experiments.
@@ -162,8 +162,7 @@
 	<p>
 		<b>The second panel, "System metrics"</b> stacks the slaves' resource usage,
 		for the selected metric and experiment.
-		Each colored layer corresponds to a single machine, however there are not enough
-		different colors (10) so they might be shared by different machines.
+		Each colored layer corresponds to a single machine, however we're only using 10 colors so they might be shared by different machines.
 	</p>
 
 	<p style="text-align:center;">
