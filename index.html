@@ -14,7 +14,7 @@
 			font-family: 'Balthazar', serif;
 			max-width: 800px;
 			margin: 0 auto;
-			padding: 0 0.5em;
+			padding: 0.5em;
 		}
 		
 		h1,h2,h3 {
@@ -54,50 +54,142 @@
 		a:hover {
 			text-decoration: underline;
 		}
+
+		footer {
+			font-size:70%;
+			text-align: center;
+		}
+
+		pre {
+			padding: 0.5em;
+			border-radius: 0.5em;
+			background: #222;
+			color: #5F5;
+		}
+
+		pre,code {
+			font-family: monospace;
+			font-weight: bold;
+			font-size:10px;
+			font-size: 1rem;
+		}
 	</style>
 </head>
 <body>
 	<h1>Metrics visualization toolkit for Grid5000</h1>
 
 	<nav>
-		<a href="example/">Example</a>
+		<a href="visu/" target="_blank">Example</a>
+		<a href="#notes">Example notes</a>
 		<a href="https://github.com/martinkirch/g5k-v11n/">Source</a>
 	</nav>
 	
 	<p>
 		This set of scripts allows you, after an experiment on the
 		<a href="https://www.grid5000.fr/" target="_blank">Grid5000</a>
-		platform, to fetch per-machine metrics and to see them nicely stacked,
+		platform, to fetch per-machine metrics through the API and to see them nicely stacked,
 		thanks to Mike Bostock's
 		<a href="http://d3js.org/" target="_blank">D3.js</a> .
-		Initially created to perform Hadoop jobs forensics (hence the "Counters" side),
+		It can also draw histograms from the system counters of different Hadoop experiments.
+		Though, for general use
 		the Hadoop part can be bypassed if you just want to see how the
-		ressource usage among your cluster evolved during an experiment.
+		ressource usage among your cluster evolved during an experiment (see below).
 	</p>
 
-	<p>Release in progress - more details coming soon !</p>
+	<p>
+		Developped and tested on Firefox.
+		We would welcome any feedback about running it in other browsers.
+	</p>
+
+
 
 	<h2>Usage</h2>
 
 	<ol>
 		<li>
-			
+			Assuming you run a job by invoking :
+			<pre>hadoop [my hadoop parameters] &amp;&gt; client.log</pre>
+			Wait at least 30 seconds after the job termination, while Ganglia fetches the last metrics.
+		</li>
+		<li>
+			Let <code>$MASTERS</code> and <code>$SLAVES</code> be the paths to 
+			the Hadoop configuration files which contain the master and slaves nodes lists.
+			Invoke :
+			<pre>./grabMetrics.py client.log $MASTERS $SLAVES > file.json</pre>
+		</li>
+		<li>
+			You may repeat the operation for as many Hadoop runs as you want.
+			Note the scripts are made to manage a single JSON file per program execution,
+			but each execution may include many MapReduce jobs.
+		</li>
+		<li>
+			Let's say you launched 3 Hadoop programs and created <code>file1.json</code>,
+			<code>file2.json</code> and <code>file3.json</code>.
+			In the <code>visu</code> folder,
+			edit the first <code>script</code> block in <code>visu/index.html</code>
+			such that it contains :
+			<pre>var inputs = [
+      "file1.json",
+      "file2.json",
+      "file3.json"
+    ];</pre>
+		</li>
+		<li>
+			Open <code>visu/index.html</code> in a browser.
+			See what happened.
+			Go back debugging :)
 		</li>
 	</ol>
 
+
+
+	<h2>Notes on the example<a name="notes"></a></h2>
+
+	<p>
+		All time measurements are in seconds.
+	</p>
+	
+	<p>
+		<b>The first panel, "Counters"</b> draws histograms from the Hadoop's sytem counter(s) you
+		selected; move your mouse over the "Counters" button to see the counters
+		list. Hadoop counters' names are prefixed by their job ID, for programs
+		running more than one MapReduce.
+		If you generated many JSON files, you may check "Filter on XP name",
+		click "Draw", enter a regular expression and the histograms will only
+		display the experiments matching the expression.
+	</p>
+
+	<p>
+		<b>The second panel, "System metrics"</b> stacks the slaves' resource usage,
+		for the selected metric and experiment.
+	</p>
+
+	<p style="text-align:center;">
+		⚠ The "Print" and "Source" features are experimental ⚠
+	</p>
+
+
+
+
 	<h2>Adapting it to your needs</h2>
 
-	<p></p>
-
 	<p>
-		<b>Showing more/different metrics:</b> 
+		<b>Showing more/different metrics:</b> simply edit the metrics list
+		at the bottom of the <code>grabMetrics.py</code> script.
+		<a href="https://intranet.grid5000.fr/ganglia/?r=hour&s=descending&c=Grenoble" target="_blank">Ganglia</a>
+		gives a list of the available metrics.
 	</p>
 
 	<p>
-		<b>Removing the Hadoop part:</b> 
+		<b>Removing the Hadoop part:</b> to do so you would have to tune the main block
+		at the end of the <code>grabMetrics.py</code> script.
+		Change its arguments such that you provide two timestamps
+		(start and end of the experiment) and a machines list.
+		See which fields are required in the generated JSON in 
+		<a href="visu/non-Hadoop-job.json">visu/non-Hadoop-job.json</a> .
 	</p>
 
-	<p>
+	<footer>
 		Copyright &copy; 2014
 		<a href="http://membres.liglab.fr/kirchgessner/">Martin Kirchgessner</a>,
 		Université Joseph Fourier. All rights reserved.
@@ -107,7 +199,7 @@
 			BSD-3-Clause
 		</a>
 		license.
-	</p>
+	</footer>
 
 </body>
 </html>
