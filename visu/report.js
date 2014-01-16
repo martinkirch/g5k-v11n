@@ -226,7 +226,8 @@ var Report = {
   },
   
   copy: function() {
-  	window.prompt("Hit Ctrl+C, save somewhere, print.", document.body.outerHTML);
+  	window.prompt("Hit Ctrl+C, save somewhere.",
+  	"<svg width='"+Report.width+"' height='"+Report.height+"'>"+Report.svg.html()+"</svg>");
   },
   
   print: function() {
