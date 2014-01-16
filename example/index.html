@@ -41,9 +41,15 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-  <style type="text/css">
+  <style type="text/css" media="print,screen">
     body {
       font-family: sans-serif;
+    }
+    
+    header input[type=button] {
+    	float:right;
+    	padding:0.3em;
+    	font-size:120%;
     }
   
     #msg_loading {
@@ -104,6 +110,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   		font-weight:bold;
   	}
   	
+  	svg text.jobID {
+  		text-anchor: end;
+  	}
+  	
+  	svg rect {
+  		shape-rendering: crispEdges;
+  	}
+  	
   	svg .brush {
       stroke: #fff;
       fill-opacity: .125;
@@ -114,7 +128,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </head>
 <body>
 	<header>
-    <input type="button" value="DRAW" onclick="Report.draw()" style="float:right; padding:1em; font-size:120%;">
+    <input type="button" value="SMALL" onclick="Report.small()">
+    <input type="button" value="COPY" onclick="Report.copy()">
+    <input type="button" value="PRINT" onclick="Report.print()">
+    <input type="button" value="DRAW" onclick="Report.draw()">
   
     <input type="checkbox" value="filter" id="doFilter" />
     <label for="doFilter">Filter on XP name</label>
@@ -130,6 +147,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	  <select id="metrics"></select>
 	  for 
 	  <select id="xpname"></select>
+	
+	<input type="checkbox" value="monochrome" id="monochrome" />
+    <label for="monochrome">monochrome</label>
+    
 	</header>
 	
 	<div id="msg_loading">LOADING ...</div>

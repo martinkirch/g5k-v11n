@@ -1,33 +1,3 @@
-/*
-Copyright (c) 2014, Martin Kirchgessner, Université Joseph Fourier
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice, this
-  list of conditions and the following disclaimer in the documentation and/or
-  other materials provided with the distribution.
-
-* Neither the name Université Joseph Fourier nor the names of 
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 var Report = {
   data: null,
   
@@ -35,6 +5,7 @@ var Report = {
   width: 1220,
   height: 600,
   padding: 40,
+  nbTicks: 10,
   
   lastRegExpFilter: "",
   
@@ -154,8 +125,9 @@ var Report = {
       case "metrics":
         var metric = document.getElementById('metrics').value;
         var xpName = document.getElementById('xpname').value;
-
-        Report.current = new StackedHistograms(Report.data[xpName], metric);
+        var monochrome = !d3.select("#monochrome:checked").empty();
+        
+        Report.current = new StackedHistograms(Report.data[xpName], metric, monochrome);
         break;
       
       default:
@@ -184,8 +156,9 @@ var Report = {
   /***************************************************************************
    * Histogram axis - If one scale is null it won't be drawn
    * returns the update(xScale, yScale) function
+   * xTitle is optional and requires xScale
    */
-  drawAxis: function(xScale, yScale) {
+  drawAxis: function(xScale, yScale, xTitle) {
     var xAxis = null;
     var xGrid = null;
     
@@ -194,8 +167,16 @@ var Report = {
 
   		xGrid = Report.svg.append('g')
   			.classed('axis', true)
-  			.attr('transform', 'translate(0,'+ (Report.height - Report.padding + 1)+')')
+  			.attr('transform', 'translate(0,'+ (Report.height - Report.padding + 1)+')');
+  		
+  		if (xTitle) {
+    		xGrid.append('text')
+    			.text(xTitle)
+    			.attr({x: Report.width/2, y:Report.padding-5, textAnchor: 'middle'});
+    	}
     }
+    
+    
     
     var yAxis = null;
     var yGrid = null;
@@ -219,7 +200,7 @@ var Report = {
 		    yGrid.call(yAxis.scale(y));
 		    
     		var lines = yGrid.selectAll('line.grid')
-    		                 .data(y.ticks(10));
+    		                 .data(y.ticks(Report.nbTicks));
     		
     		lines.exit()
     		     .remove();
@@ -229,7 +210,7 @@ var Report = {
     		    .classed('grid', true)
     		    .attr({
     		      x1: 0,
-    		      x2: Report.width,
+    		      x2: Report.width-2*Report.padding,
     		    });
     		
     		lines.attr({
@@ -242,6 +223,22 @@ var Report = {
 		updater(xScale, yScale);
 		
 		return updater;
+  },
+  
+  copy: function() {
+  	window.prompt("Hit Ctrl+C, save somewhere, print.", document.body.outerHTML);
+  },
+  
+  print: function() {
+    d3.select('header').remove();
+    window.print();
+  },
+  
+  small: function() {
+    Report.width = Math.floor(Report.width/2);
+    Report.height = Math.floor(Report.height/2),
+    Report.nbTicks = Math.floor(Report.nbTicks/2),
+    Report.draw();
   }
 };
 
@@ -401,7 +398,7 @@ CountersHistograms.prototype = {
  * From an experiment data object, show the stacked metric "metric"
  * Supports x-axis zooming
  */
-function StackedHistograms(xpData, metric) {
+function StackedHistograms(xpData, metric, monochrome) {
   var self = this;
   
   this.xpData = xpData;
@@ -417,9 +414,11 @@ function StackedHistograms(xpData, metric) {
 	this.hScale = d3.scale.linear()
                         .range([0, Report.height - 2 * Report.padding]);
   
-  this.colorScale = d3.scale.category20();
-  
-  
+  if (monochrome) {
+  	this.colorScale = function(){ return "#333"};
+  } else {
+  	this.colorScale = d3.scale.category20();
+  }
   
   this.drawnBrush = Report.svg.append('g')
             .classed('brush', true);
@@ -451,7 +450,7 @@ function StackedHistograms(xpData, metric) {
   }
   
   
-  this.updateAxisScales = Report.drawAxis(this.xScale, this.yScale);
+  this.updateAxisScales = Report.drawAxis(this.xScale, this.yScale, "Time (s)");
   
   this.update();
 };
@@ -513,20 +512,36 @@ StackedHistograms.prototype = {
    */
   updateJobSeparators: function() {
     var self = this;
-    var separators = Report.svg.selectAll("line.jobseparator")
-              .data(this.xpData.jobs)
-    
-    separators.enter()
-                .append('line')
-                .classed("jobseparator", true)
-     
     var globalStart = this.xpData.start_timestamp;
-    separators.attr({
-      x1: function(jobInfo) { return self.xScale(jobInfo.end_timestamp - globalStart) },
-      x2: function(jobInfo) { return self.xScale(jobInfo.end_timestamp - globalStart) },
-      y1: this.yScale.range()[0],
-      y2: this.yScale.range()[1]
-    });
+    
+    var separators = Report.svg.selectAll("line.jobseparators")
+              .data(this.xpData.jobs);
+    
+    var separatorsEnter = separators.enter().append("g")
+                          .classed("jobseparators", true)
+                          .attr("transform", function(jobInfo) { 
+                            return "translate("+self.xScale(jobInfo.end_timestamp - globalStart)+",0)"; 
+                          });
+    
+    separatorsEnter.append('line')
+                   .classed("jobseparator", true)
+                    .attr({
+                      x1: 0,
+                      x2: 0,
+                      y1: this.yScale.range()[0],
+                      y2: this.yScale.range()[1]
+                    });
+    
+    separatorsEnter.append("text")
+                   .classed("jobID", true)
+                   .attr({
+                     x: -Report.padding,
+                     y: -5,
+                     transform: "rotate(270,0,0)"
+                   })
+                   .text(function(d, i) {
+                    return "Job #"+i;
+                   });
   },
   
   updateBars: function(data) {
@@ -537,9 +552,9 @@ StackedHistograms.prototype = {
 		groups.enter()  
 			  .append("g")
 			  .attr("class", function(d) { return "series "+d[0].node; })
-  			.style("fill", function(d, i) {
+  			  .style("fill", function(d, i) {
   				return self.colorScale(i);
-  			});
+  			  });
 	  
 	  var rects = groups.selectAll("rect")
 	                 .data(function(d) {return d;});
