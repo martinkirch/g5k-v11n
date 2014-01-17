@@ -16,6 +16,11 @@
 			margin: 0 auto;
 			padding: 0.5em;
 		}
+
+		header {
+			background: url('sample.png') center bottom no-repeat;
+			padding-bottom:2em;
+		}
 		
 		h1,h2,h3 {
 			text-shadow: white -2px 2px 1px;
@@ -43,7 +48,10 @@
 
 		nav a {
 			display: inline-block;
-			margin: 0 1em;
+			margin: 0 0.5em;
+			padding: 0.3em 1em;
+			border-radius: 0.5em;
+			background: white;
 		}
 
 		a {
@@ -76,19 +84,20 @@
 	</style>
 </head>
 <body>
-	<h1>Metrics visualization toolkit for Grid5000</h1>
-
-	<nav>
-		<a href="visu/" target="_blank">Example</a>
-		<a href="#notes">Example notes</a>
-		<a href="https://github.com/martinkirch/g5k-v11n/">Source</a>
-	</nav>
+	<header>
+		<h1>Metrics visualization toolkit for Grid5000</h1>
+		<nav>
+			<a href="visu/" target="_blank">Example</a>
+			<a href="#notes">Example notes</a>
+			<a href="https://github.com/martinkirch/g5k-v11n/">Source</a>
+		</nav>
+	</header>
 	
 	<p>
 		This set of scripts allows you, after an experiment on the
 		<a href="https://www.grid5000.fr/" target="_blank">Grid5000</a>
-		platform, to fetch per-machine metrics (CPU, network usage, ...) through the API and to see them nicely stacked,
-		thanks to Mike Bostock's
+		platform, to fetch per-machine metrics (CPU, network usage, ...) and
+		see them nicely stacked, thanks to Mike Bostock's
 		<a href="http://d3js.org/" target="_blank">D3.js</a> .
 		It can also draw histograms from the system counters of different Hadoop experiments.
 		Though, for general use
@@ -103,8 +112,30 @@
 
 
 
-	<h2>Usage</h2>
+	<h2>Setup</h2>
+	<p>
+		Resource usage is fetched through
+		<a href="https://www.grid5000.fr/mediawiki/index.php/API_all_in_one_Practical" target="_blank">Grid5000's REST API</a>,
+		which is itself fed by the
+		<a href="http://ganglia.sourceforge.net/" target="_blank">Ganglia</a>
+		monitoring system. 
+		Ganglia is installed and running on the default system image,
+		but if you're using a custom image check that the deamon is still running
+		after reboot - you may have to call
+		<code>/etc/init.d/ganglia-monitor restart</code>
+		as root on each machine.
+		Check if your machines, once installed, still appear in
+		<a href="https://intranet.grid5000.fr/ganglia/" target="_blank">Grid5000's per-site Ganglia reports</a>.
+	</p>
 
+	<p>
+		Once you ensured that Ganglia is still part of your deployment,
+		you only have to copy the <code>grabMetrics.py</code> script
+		such that it will be available to your OAR driver script or shell.
+	</p>
+
+	
+	<h2>Usage</h2>
 	<ol>
 		<li>
 			Assuming you run a job by invoking :
@@ -167,6 +198,12 @@
 
 	<p style="text-align:center;">
 		⚠ The "Print" and "Source" features are experimental ⚠
+	</p>
+
+	<p>
+		These two buttons are intended to provide respectively a PDF and SVG
+		export (tip: ask your browser to print without header/footer and use pdfcrop).
+		But they are far from perfect because we are limited by browsers capabilities...
 	</p>
 
 
